@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Family Circle: P0/P1 Code Review</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#23222b;--muted:#6b6877;--line:#e3dfd6;--p1:#c0392b;--code:#f0ece3}
+@media (prefers-color-scheme:dark){:root{--bg:#1a1a20;--card:#25252d;--ink:#ece9f1;--muted:#a19dae;--line:#3a3944;--code:#1a1a20}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:24px 16px 60px}
+h1{margin:0 0 4px}.sub{color:var(--muted);margin-bottom:20px}
+.sum{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.pill{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px 14px;font-size:14px}
+.f{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--p1);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.f h2{margin:0 0 4px;font-size:17px}
+.tag{display:inline-block;font-size:12px;font-weight:700;color:#fff;background:var(--p1);border-radius:4px;padding:1px 7px;margin-right:6px;vertical-align:middle}
+.loc{font-family:ui-monospace,Consolas,monospace;font-size:13px;background:var(--code);border-radius:4px;padding:1px 6px}
+.k{font-weight:700;margin-top:8px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+p{margin:2px 0}
+.note{color:var(--muted);font-size:13px;margin-top:24px}
+</style>
+</head>
+<body>
+<main>
+<h1>Family Circle: P0 / P1 code review</h1>
+<div class="sub">Scope: the whole repository (no git history, so no diff) · files reviewed: <span class="loc">server.js</span>, <span class="loc">public/app.js</span>, <span class="loc">package.json</span> · focus: P0 and P1 only</div>
+<div class="sum"><span class="pill"><b>0</b> P0</span><span class="pill"><b>5</b> P1</span><span class="pill">No SQL injection or XSS found (queries are parameterised, user text uses <code>textContent</code>)</span></div>
+
+<section class="f">
+<h2><span class="tag">P1</span>Media streams have no error handling and are never destroyed on client abort</h2>
+<p><span class="loc">server.js:216</span> and <span class="loc">server.js:220</span></p>
+<div class="k">Problem</div>
+<p><code>fs.createReadStream(...).pipe(res)</code> has no <code>'error'</code> listener and no cleanup when the client disconnects.</p>
+<div class="k">Failure scenario</div>
+<p>(1) A file is deleted between <code>fs.stat</code> and the open, for example someone deletes a post while another member's browser is loading its video. The read stream emits an unhandled <code>'error'</code> and the whole Node process crashes, taking the app down for the family. (2) Every time a browser aborts a video request, which happens on every seek, <code>pipe()</code> leaves the read stream open and its file descriptor leaks. After enough seeking the server runs out of descriptors and starts failing requests.</p>
+<div class="k">Suggested fix</div>
+<p>Use <code>stream.pipeline(fs.createReadStream(...), res, () => {})</code> so errors are handled and the file is closed when the client goes away.</p>
+</section>
+
+<section class="f">
+<h2><span class="tag">P1</span>Removing a human silently deletes everything they posted as a plush or pet</h2>
+<p><span class="loc">server.js:45</span>, <span class="loc">server.js:55</span>, <span class="loc">server.js:111</span> (<code>posted_by_id ... ON DELETE CASCADE</code>), and the delete-member handler</p>
+<div class="k">Problem</div>
+<p><code>posts</code>, <code>comments</code> and <code>events</code> cascade-delete on <code>posted_by_id</code>, and so do <code>poll_votes.cast_by_id</code>. The confirmation only says the member's own posts, replies and votes will go.</p>
+<div class="k">Failure scenario</div>
+<p>An admin removes Dad. Every post, reply, event and poll vote Dad made while acting as "Mr Bear" or "Rex" is deleted too, along with other members' replies on those posts and the uploaded photos and videos. The pets' shared history is wiped with no warning that it includes their content.</p>
+<div class="k">Suggested fix</div>
+<p>Make <code>posted_by_id</code> and <code>cast_by_id</code> <code>ON DELETE SET NULL</code> (or reassign to the admin), and change the dialog to say exactly what will be deleted.</p>
+</section>
+
+<section class="f">
+<h2><span class="tag">P1</span>Edit and delete permission ignores the identity being acted as</h2>
+<p><span class="loc">server.js:617</span> (same pattern for comments and events)</p>
+<div class="k">Problem</div>
+<p>The check is <code>post.posted_by_id === s.user.id || post.author_id === s.user.id</code>. <code>s.user</code> is always the real human, so <code>author_id === s.user.id</code> can never match a plush or pet author. The <code>s.user.is_admin</code> part is also dead, because admins are blocked from posts earlier.</p>
+<div class="k">Failure scenario</div>
+<p>Mum acts as Mr Bear and sees Bear's posts, but only the human who wrote a post can edit or delete it. A child who switches to Bear to fix a typo in a post Dad wrote as Bear gets no Edit button and a 403 from the API, which breaks the "assume the plush's identity" model.</p>
+<div class="k">Suggested fix</div>
+<p>Compare against <code>s.effective.id</code> as well: allow when <code>post.author_id === s.effective.id</code> or <code>post.posted_by_id === s.user.id</code>, and mirror it in <code>can_edit</code>.</p>
+</section>
+
+<section class="f">
+<h2><span class="tag">P1</span>Unauthenticated login attempts block the event loop and can dodge the throttle</h2>
+<p><span class="loc">server.js:398</span> (and the <code>checkPassword</code> call just above it)</p>
+<div class="k">Problem</div>
+<p>Every login attempt, including for unknown usernames (a dummy hash is computed on purpose), runs <code>crypto.scryptSync</code>, which blocks the single Node thread for tens of milliseconds. The throttle key is <code>ip|username</code>, so changing the username each time avoids it.</p>
+<div class="k">Failure scenario</div>
+<p>Anyone who can reach the port (for example when run with <code>HOST=0.0.0.0</code> on the home network) can spam login requests with random usernames. Each one stalls the server, so uploads, video streaming and every other request for the family stall too. The throttle map also grows without bound.</p>
+<div class="k">Suggested fix</div>
+<p>Throttle per IP as well as per username, use the async <code>crypto.scrypt</code>, and prune old entries from the attempts map.</p>
+</section>
+
+<section class="f">
+<h2><span class="tag">P1</span>Stated Node requirement is wrong, so the app fails to start on some supported versions</h2>
+<p><span class="loc">package.json:1</span> (<code>"engines": { "node": "&gt;=22.5" }</code>) and the README</p>
+<div class="k">Problem</div>
+<p><code>node:sqlite</code> was added in Node 22.5 behind <code>--experimental-sqlite</code>. It only loads without the flag from 22.13 (and 23.4).</p>
+<div class="k">Failure scenario</div>
+<p>Someone follows the README on Node 22.5 to 22.12. <code>npm start</code> throws "No such built-in module: node:sqlite" and the app never starts, even though their version is within the documented range.</p>
+<div class="k">Suggested fix</div>
+<p>Set <code>engines</code> and the README to Node 22.13 or newer (or 24 LTS), or add the flag to the start script.</p>
+</section>
+
+<div class="note">Lower-severity items noticed but excluded by the P0/P1 filter: post edit can remove all media from a media-only post (stale <code>hasMedia</code> check at <code>server.js:621</code>); uploads that never get attached are never cleaned up; a profile photo reused for two members is deleted from disk when either is removed.</div>
+</main>
+</body>
+</html>

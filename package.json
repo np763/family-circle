@@ -1,0 +1,12 @@
+{
+  "name": "family-circle",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/bugs.test.js && node test/run-smoke.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

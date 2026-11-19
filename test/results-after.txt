@@ -1,0 +1,17 @@
+✔ bug 1a: a read-stream error must not crash the process (164.9625ms)
+✔ bug 1b: aborting a download must close the file stream (no fd leak) (166.3405ms)
+✔ bug 2: removing a human keeps content they created as a plush/pet (463.0126ms)
+✔ bug 3: acting as a plush lets you edit and delete its posts, replies and events (423.3226ms)
+✔ bug 4a: throttle limits a single IP that rotates usernames (0.3885ms)
+✔ bug 4b: throttle memory is pruned once the window passes (0.4822ms)
+✔ bug 4c: password checks must not block the event loop (140.1403ms)
+✔ bug 4d: server throttles an IP flooding logins with random usernames (1142.1278ms)
+✔ bug 5: engines and README require Node >= 22.13 (node:sqlite is unflagged from there) (0.3903ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2557.2994

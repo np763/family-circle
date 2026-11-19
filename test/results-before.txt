@@ -1,0 +1,166 @@
+✖ bug 1a: a read-stream error must not crash the process (3.635ms)
+✖ bug 1b: aborting a download must close the file stream (no fd leak) (162.2205ms)
+✖ bug 2: removing a human keeps content they created as a plush/pet (456.2548ms)
+✖ bug 3: acting as a plush lets you edit and delete its posts, replies and events (403.7552ms)
+✖ bug 4a: throttle limits a single IP that rotates usernames (0.3886ms)
+✖ bug 4b: throttle memory is pruned once the window passes (0.352ms)
+✖ bug 4c: password checks must not block the event loop (195.3052ms)
+✖ bug 4d: server throttles an IP flooding logins with random usernames (1658.3623ms)
+✖ bug 5: engines and README require Node >= 22.13 (node:sqlite is unflagged from there) (0.3514ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 0
+ℹ fail 9
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2939.1385
+
+✖ failing tests:
+
+test at test\bugs.test.js:32:1
+✖ bug 1a: a read-stream error must not crash the process (3.635ms)
+  [Error: ENOENT: no such file or directory, open 'C:\Users\TINKTA~1\AppData\Local\Temp\family-missing-1795075970306'] { errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\\Users\\TINKTA~1\\AppData\\Local\\Temp\\family-missing-1795075970306' }
+
+test at test\bugs.test.js:52:1
+✖ bug 1b: aborting a download must close the file stream (no fd leak) (162.2205ms)
+  AssertionError [ERR_ASSERTION]: source file stream must be destroyed when the client disconnects
+  
+  false !== true
+  
+      at TestContext.<anonymous> (D:\tinktanker\proj3\test\bugs.test.js:63:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\bugs.test.js:69:1
+✖ bug 2: removing a human keeps content they created as a plush/pet (456.2548ms)
+  AssertionError [ERR_ASSERTION]: Mr Bear's post must survive Dad's removal
+      at D:\tinktanker\proj3\test\bugs.test.js:88:10
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async withServer (D:\tinktanker\proj3\test\bugs.test.js:18:9)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\bugs.test.js:103:1
+✖ bug 3: acting as a plush lets you edit and delete its posts, replies and events (403.7552ms)
+  AssertionError [ERR_ASSERTION]: UI must show Edit while acting as the post author
+  
+  false !== true
+  
+      at D:\tinktanker\proj3\test\bugs.test.js:117:10
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async withServer (D:\tinktanker\proj3\test\bugs.test.js:18:9)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\bugs.test.js:129:1
+✖ bug 4a: throttle limits a single IP that rotates usernames (0.3886ms)
+  AssertionError [ERR_ASSERTION]: IP should be blocked after many failures across usernames
+  
+  false !== true
+  
+      at TestContext.<anonymous> (D:\tinktanker\proj3\test\bugs.test.js:132:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\bugs.test.js:136:1
+✖ bug 4b: throttle memory is pruned once the window passes (0.352ms)
+  AssertionError [ERR_ASSERTION]: expired entries should be dropped, size was 101
+      at TestContext.<anonymous> (D:\tinktanker\proj3\test\bugs.test.js:142:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\bugs.test.js:145:1
+✖ bug 4c: password checks must not block the event loop (195.3052ms)
+  AssertionError [ERR_ASSERTION]: event loop was starved while hashing (ticks=0)
+      at TestContext.<anonymous> (D:\tinktanker\proj3\test\bugs.test.js:154:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\bugs.test.js:157:1
+✖ bug 4d: server throttles an IP flooding logins with random usernames (1658.3623ms)
+  AssertionError [ERR_ASSERTION]: expected a 429 somewhere in 45 attempts, got only 401
+      at D:\tinktanker\proj3\test\bugs.test.js:161:10
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async withServer (D:\tinktanker\proj3\test\bugs.test.js:18:9)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\bugs.test.js:168:1
+✖ bug 5: engines and README require Node >= 22.13 (node:sqlite is unflagged from there) (0.3514ms)
+  AssertionError [ERR_ASSERTION]: engines.node is >=22.5
+      at TestContext.<anonymous> (D:\tinktanker\proj3\test\bugs.test.js:172:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
